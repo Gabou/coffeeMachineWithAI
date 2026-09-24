@@ -1,1 +1,41 @@
-first commit - to replace
+Coffee Machine — first iteration
+===============================
+
+A small Python 3 class that translates customer orders into drink maker
+commands. It does not implement a customer interface or a drink maker.
+No third-party dependencies are required.
+
+Usage (from the repository directory):
+
+    from coffee_machine import CoffeeMachine
+
+    machine = CoffeeMachine()
+    machine.make_drink("tea", 1)       # "T:1:0"
+    machine.make_drink("chocolate")    # "H::"
+    machine.make_drink("coffee", 2)    # "C:2:0"
+    machine.message("Drink ready")    # "M:Drink ready"
+
+API choices
+-----------
+
+Orders use the exact drink names "tea", "coffee" and "chocolate".
+Sugar defaults to zero and must be an integer: 0, 1 or 2 (not a boolean).
+Zero sugar leaves both protocol fields empty; one or two sugars includes
+a stick, encoded as 0 in the last field. Unknown drink names or invalid
+sugar amounts raise ValueError rather than producing an invalid command.
+Message content is a string, preserved verbatim after the "M:" prefix.
+Methods return commands; the caller is responsible for sending them.
+
+These input conventions and Python were chosen because the issue does not
+specify a language, an order representation or invalid-input behavior.
+
+Tests
+-----
+
+Run from the repository directory:
+
+    python3 -m unittest -v
+
+Implemented through failing tests followed by the minimal production change:
+drinks without sugar, all drink/sugar combinations, then messages and invalid
+orders. Tests use Python's standard unittest library.
