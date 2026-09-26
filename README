@@ -1,5 +1,5 @@
-Coffee Machine — first iteration
-===============================
+Coffee Machine — second iteration
+================================
 
 A small Python 3 class that translates customer orders into drink maker
 commands. It does not implement a customer interface or a drink maker.
@@ -10,9 +10,10 @@ Usage (from the repository directory):
     from coffee_machine import CoffeeMachine
 
     machine = CoffeeMachine()
-    machine.make_drink("tea", 1)       # "T:1:0"
-    machine.make_drink("chocolate")    # "H::"
-    machine.make_drink("coffee", 2)    # "C:2:0"
+    machine.make_drink("tea", 1, money=0.4)    # "T:1:0"
+    machine.make_drink("chocolate", money=1)  # "H::"
+    machine.make_drink("coffee", 2, money=0.6) # "C:2:0"
+    machine.make_drink("coffee", money=0.4)   # "M:Missing 0.20 EUR"
     machine.message("Drink ready")    # "M:Drink ready"
 
 API choices
@@ -26,6 +27,15 @@ sugar amounts raise ValueError rather than producing an invalid command.
 Message content is a string, preserved verbatim after the "M:" prefix.
 Methods return commands; the caller is responsible for sending them.
 
+Tea costs EUR 0.40, coffee EUR 0.60 and chocolate EUR 0.50, regardless of
+sugar. The optional third argument, money, is the amount paid in euros
+(int, float or Decimal); omitted payment means zero. Amounts must be finite,
+non-negative and in whole cents; invalid amounts raise ValueError.
+Calculations use Decimal to preserve decimal currency values.
+Insufficient payment returns only an M: message with the missing amount.
+Exact payment or overpayment returns the drink command; change is handled
+by the machine, not this class.
+
 These input conventions and Python were chosen because the issue does not
 specify a language, an order representation or invalid-input behavior.
 
@@ -36,6 +46,6 @@ Run from the repository directory:
 
     python3 -m unittest -v
 
-Implemented through failing tests followed by the minimal production change:
-drinks without sugar, all drink/sugar combinations, then messages and invalid
-orders. Tests use Python's standard unittest library.
+Tests cover drink/sugar combinations, exact payment, overpayment, missing
+payment, insufficient payment, messages and invalid inputs. Tests use
+Python's standard unittest library.
