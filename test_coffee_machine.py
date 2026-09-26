@@ -54,6 +54,52 @@ class CoffeeMachineTests(unittest.TestCase):
     def test_omitted_payment_is_zero(self):
         self.assertEqual(self.machine.make_drink("tea"), "M:Missing 0.40 EUR")
 
+    def test_orange_juice_payment(self):
+        for money, expected in (
+            (0, "M:Missing 0.60 EUR"),
+            (0.5, "M:Missing 0.10 EUR"),
+            (Decimal("0.59"), "M:Missing 0.01 EUR"),
+            (0.6, "O::"),
+            (1, "O::"),
+        ):
+            with self.subTest(money=money):
+                self.assertEqual(
+                    self.machine.make_drink("orange juice", money=money), expected
+                )
+
+    def test_extra_hot_drinks_keep_prices_and_sugar_protocol(self):
+        for drink, price, code in (
+            ("coffee", Decimal("0.60"), "Ch"),
+            ("chocolate", Decimal("0.50"), "Hh"),
+            ("tea", Decimal("0.40"), "Th"),
+        ):
+            for sugars, suffix in ((0, "::"), (1, ":1:0"), (2, ":2:0")):
+                for money in (price, 1):
+                    with self.subTest(drink=drink, sugars=sugars, money=money):
+                        self.assertEqual(
+                            self.machine.make_drink(drink, sugars, money, extra_hot=True),
+                            code + suffix,
+                        )
+                with self.subTest(drink=drink, sugars=sugars, payment="insufficient"):
+                    self.assertEqual(
+                        self.machine.make_drink(
+                            drink, sugars, price - Decimal("0.01"), extra_hot=True
+                        ),
+                        "M:Missing 0.01 EUR",
+                    )
+
+    def test_orange_juice_rejects_sugar_and_extra_heat(self):
+        for sugars, extra_hot in ((1, False), (2, False), (0, True), (1, True)):
+            with self.subTest(sugars=sugars, extra_hot=extra_hot):
+                with self.assertRaises(ValueError):
+                    self.machine.make_drink("orange juice", sugars, 1, extra_hot)
+
+    def test_extra_hot_requires_a_boolean(self):
+        for extra_hot in (0, 1, "true", None):
+            with self.subTest(extra_hot=extra_hot):
+                with self.assertRaises(ValueError):
+                    self.machine.make_drink("coffee", money=1, extra_hot=extra_hot)
+
     def test_invalid_payment_is_rejected(self):
         for money in (-1, True, None, "0.60", float("nan"), float("inf"), 0.001):
             with self.subTest(money=money):

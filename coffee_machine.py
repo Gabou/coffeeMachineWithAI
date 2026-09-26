@@ -5,14 +5,19 @@ class CoffeeMachine:
     """Translate customer orders into drink maker protocol commands."""
 
     def make_drink(
-        self, drink: str, sugars: int = 0, money: int | float | Decimal = 0
+        self, drink: str, sugars: int = 0, money: int | float | Decimal = 0,
+        extra_hot: bool = False,
     ) -> str:
         """Return a drink command or a missing-payment message; money is in euros."""
-        codes = {"tea": "T", "coffee": "C", "chocolate": "H"}
+        codes = {"tea": "T", "coffee": "C", "chocolate": "H", "orange juice": "O"}
         if drink not in codes:
-            raise ValueError("Drink must be tea, coffee or chocolate")
+            raise ValueError("Drink must be tea, coffee, chocolate or orange juice")
         if type(sugars) is not int or sugars not in (0, 1, 2):
             raise ValueError("Sugars must be an integer between 0 and 2")
+        if type(extra_hot) is not bool:
+            raise ValueError("Extra hot must be a boolean")
+        if drink == "orange juice" and (sugars or extra_hot):
+            raise ValueError("Orange juice cannot have sugar or be extra hot")
         if type(money) not in (int, float, Decimal):
             raise ValueError("Money must be a non-negative amount in whole cents")
         payment = Decimal(str(money))
@@ -22,11 +27,16 @@ class CoffeeMachine:
             or payment * 100 != (payment * 100).to_integral_value()
         ):
             raise ValueError("Money must be a non-negative amount in whole cents")
-        prices = {"tea": Decimal("0.40"), "coffee": Decimal("0.60"), "chocolate": Decimal("0.50")}
+        prices = {
+            "tea": Decimal("0.40"),
+            "coffee": Decimal("0.60"),
+            "chocolate": Decimal("0.50"),
+            "orange juice": Decimal("0.60"),
+        }
         missing = prices[drink] - payment
         if missing > 0:
             return self.message(f"Missing {missing:.2f} EUR")
-        code = codes[drink]
+        code = codes[drink] + ("h" if extra_hot else "")
         return f"{code}:{sugars}:0" if sugars else f"{code}::"
 
     def message(self, content: str) -> str:

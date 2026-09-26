@@ -1,5 +1,5 @@
-Coffee Machine — second iteration
-================================
+Coffee Machine — third iteration
+===============================
 
 A small Python 3 class that translates customer orders into drink maker
 commands. It does not implement a customer interface or a drink maker.
@@ -14,12 +14,16 @@ Usage (from the repository directory):
     machine.make_drink("chocolate", money=1)  # "H::"
     machine.make_drink("coffee", 2, money=0.6) # "C:2:0"
     machine.make_drink("coffee", money=0.4)   # "M:Missing 0.20 EUR"
+    machine.make_drink("orange juice", money=0.6) # "O::"
+    machine.make_drink("coffee", money=0.6, extra_hot=True) # "Ch::"
+    machine.make_drink("chocolate", 1, 0.5, extra_hot=True) # "Hh:1:0"
+    machine.make_drink("tea", 2, 0.4, extra_hot=True) # "Th:2:0"
     machine.message("Drink ready")    # "M:Drink ready"
 
 API choices
 -----------
 
-Orders use the exact drink names "tea", "coffee" and "chocolate".
+Orders use the exact drink names "tea", "coffee", "chocolate" and "orange juice".
 Sugar defaults to zero and must be an integer: 0, 1 or 2 (not a boolean).
 Zero sugar leaves both protocol fields empty; one or two sugars includes
 a stick, encoded as 0 in the last field. Unknown drink names or invalid
@@ -27,14 +31,19 @@ sugar amounts raise ValueError rather than producing an invalid command.
 Message content is a string, preserved verbatim after the "M:" prefix.
 Methods return commands; the caller is responsible for sending them.
 
-Tea costs EUR 0.40, coffee EUR 0.60 and chocolate EUR 0.50, regardless of
-sugar. The optional third argument, money, is the amount paid in euros
+Tea costs EUR 0.40, coffee and orange juice EUR 0.60, and chocolate EUR 0.50,
+regardless of sugar or extra heat. The optional third argument, money, is the amount paid in euros
 (int, float or Decimal); omitted payment means zero. Amounts must be finite,
 non-negative and in whole cents; invalid amounts raise ValueError.
 Calculations use Decimal to preserve decimal currency values.
 Insufficient payment returns only an M: message with the missing amount.
 Exact payment or overpayment returns the drink command; change is handled
 by the machine, not this class.
+
+The optional fourth argument, extra_hot, defaults to False and must be a
+boolean. True adds "h" to the tea, coffee or chocolate protocol code.
+Orange juice always uses "O::". Since the protocol only specifies plain
+orange juice, requests for sugar or extra heat with it raise ValueError.
 
 These input conventions and Python were chosen because the issue does not
 specify a language, an order representation or invalid-input behavior.
@@ -47,5 +56,6 @@ Run from the repository directory:
     python3 -m unittest -v
 
 Tests cover drink/sugar combinations, exact payment, overpayment, missing
-payment, insufficient payment, messages and invalid inputs. Tests use
+payment, insufficient payment, orange juice, extra hot drinks, messages
+and invalid inputs. Tests use
 Python's standard unittest library.
